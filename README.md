@@ -77,7 +77,7 @@ sudo udevadm control --reload-rules
 ```
 
 ## Contributing
-Issues and pull requests are welcome, see [Contributing](Contributing.md).
+Issues and pull requests are welcome, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
