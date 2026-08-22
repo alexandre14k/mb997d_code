@@ -1,5 +1,6 @@
 import sys
 import root
+import time
 
 
 def trace_openocd_cmd():
@@ -16,7 +17,14 @@ def trace_gdb_cmd():
 
 def trace_running_pids():
     pids = root.root_read_pids(root.openocd_pid_file())
-    return [pid for pid in pids if root.root_process_alive(pid)]
+    live_pids = [pid for pid in pids if root.root_process_alive(pid)]
+
+    if live_pids != pids:
+        root.root_remove_pid(root.openocd_pid_file())
+        for pid in live_pids:
+            root.root_append_pid(root.openocd_pid_file(), pid)
+
+    return live_pids
 
 
 def trace_is_running():
@@ -24,28 +32,32 @@ def trace_is_running():
 
 
 def trace_start():
+    if trace_is_running():
+        print("debugger already running")
+        return 0
+
+    root.root_remove_pid(root.openocd_pid_file())
+
     pid = root.root_run_background(
         trace_openocd_cmd(), root.root_dir()
     )
+
+    time.sleep(0.3)
+
+    if not root.root_process_alive(pid):
+        print("debugger process exited; check OpenOCD output")
+        return 1
+
     root.root_append_pid(root.openocd_pid_file(), pid)
     print("debugger started, pid " + str(pid))
     return 0
 
 
 def trace_stop():
-    pids = root.root_read_pids(root.openocd_pid_file())
-    if not pids:
-        print("debugger not running")
-        return 0
-    killed = 0
-    for pid in pids:
-        if root.root_process_alive(pid):
-            root.root_kill_process(pid)
-            killed += 1
+    root.root_kill_process(None)
     root.root_remove_pid(root.openocd_pid_file())
-    print("debugger stopped, killed " + str(killed) + " instance(s)")
+    print("all openocd instances stopped")
     return 0
-
 
 def trace_trace():
     if not trace_is_running():
