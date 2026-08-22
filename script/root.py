@@ -68,6 +68,17 @@ def toolchain_openocd():
 
 
 def root_kill_process(pid):
+    if not pid:
+        if root_platform() == "win32":
+            subprocess.run(["taskkill", "/IM", "openocd.exe", "/F"])
+        else:
+            subprocess.run(
+                ["pkill", "-9", "-x", "openocd"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+        return
+
     if root_platform() == "win32":
         subprocess.run(["taskkill", "/PID", str(pid), "/F"])
         return
@@ -149,16 +160,12 @@ def root_run_background(cmd, cwd=None):
             cmd,
             cwd=run_cwd,
             creationflags=flags,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
         )
     else:
         process = subprocess.Popen(
             cmd,
             cwd=run_cwd,
             start_new_session=True,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
         )
     return process.pid
 
