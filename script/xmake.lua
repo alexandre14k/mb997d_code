@@ -40,8 +40,6 @@ add_ldflags(
     {force = true}
 )
 
-set_optimize("smallest")
-
 add_includedirs("../app/bsp")
 
 includes("../ext/xmake.lua")
