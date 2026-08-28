@@ -6,20 +6,16 @@ import root
 
 def board_exec(name):
     path = os.path.join(root.root_dir(), name)
-    process = subprocess.run(
-        [sys.executable, "-B", path],
-        cwd=root.root_dir()
+    return root.root_run(
+        [sys.executable, "-B", path], root.root_dir()
     )
-    return process.returncode
 
 
 def board_exec_arg(name, arg):
     path = os.path.join(root.root_dir(), name)
-    process = subprocess.run(
-        [sys.executable, "-B", path, arg],
-        cwd=root.root_dir()
+    return root.root_run(
+        [sys.executable, "-B", path, arg], root.root_dir()
     )
-    return process.returncode
 
 
 def board_trace_hints():

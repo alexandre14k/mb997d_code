@@ -29,14 +29,16 @@ add_defines("STM32F407xx")
 add_cflags(
     "-mcpu=cortex-m4",
     "-mthumb",
-    "-mfloat-abi=soft",
+    "-mfloat-abi=softfp",
+    "-mfpu=fpv4-sp-d16",
     {force = true}
 )
 
 add_ldflags(
     "-mcpu=cortex-m4",
     "-mthumb",
-    "-mfloat-abi=soft",
+    "-mfloat-abi=softfp",
+    "-mfpu=fpv4-sp-d16",
     {force = true}
 )
 

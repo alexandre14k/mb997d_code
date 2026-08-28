@@ -2,7 +2,10 @@ import os
 import sys
 import subprocess
 import platform
+import signal
 
+def root_child_default_sigint():
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 def root_dir():
     return os.path.dirname(os.path.abspath(__file__))
@@ -94,14 +97,28 @@ def root_remove_pid(path):
 
 
 def root_run(cmd, cwd=None):
-    use_shell = root_platform() == "win32"
-    process = subprocess.run(
-        cmd,
-        cwd=cwd if cwd else base_dir(),
-        shell=use_shell,
-        stdout=sys.stdout,
-        stderr=sys.stderr,
-    )
+    run_cwd = cwd if cwd else base_dir()
+    if root_platform() == "win32":
+        process = subprocess.run(
+            cmd,
+            cwd=run_cwd,
+            shell=True,
+            stdout=sys.stdout,
+            stderr=sys.stderr,
+        )
+        return process.returncode
+
+    old_handler = signal.signal(signal.SIGINT, signal.SIG_IGN)
+    try:
+        process = subprocess.run(
+            cmd,
+            cwd=run_cwd,
+            stdout=sys.stdout,
+            stderr=sys.stderr,
+            preexec_fn=root_child_default_sigint,
+        )
+    finally:
+        signal.signal(signal.SIGINT, old_handler)
     return process.returncode
 
 
