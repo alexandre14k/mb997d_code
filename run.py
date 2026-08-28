@@ -1,6 +1,11 @@
 import os
 import sys
 import subprocess
+import signal
+
+
+def run_child_default_sigint():
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 
 def run_script_dir():
@@ -20,35 +25,50 @@ def run_ext_dir():
 def run_menu():
     print("b -- manage build")
     print("d -- manage board")
-    print("s -- manage ext")
+    print("e -- manage ext")
     print("m -- show the menu")
     print("x -- exit")
 
 
 def run_exec_build():
     path = os.path.join(run_script_dir(), "build.py")
-    process = subprocess.run(
-        [sys.executable, "-B", path],
-        cwd=run_script_dir()
-    )
+    old = signal.signal(signal.SIGINT, signal.SIG_IGN)
+    try:
+        process = subprocess.run(
+            [sys.executable, "-B", path],
+            cwd=run_script_dir(),
+            preexec_fn=run_child_default_sigint,
+        )
+    finally:
+        signal.signal(signal.SIGINT, old)
     return process.returncode
 
 
 def run_exec_board():
     path = os.path.join(run_script_dir(), "board.py")
-    process = subprocess.run(
-        [sys.executable, "-B", path],
-        cwd=run_script_dir()
-    )
+    old = signal.signal(signal.SIGINT, signal.SIG_IGN)
+    try:
+        process = subprocess.run(
+            [sys.executable, "-B", path],
+            cwd=run_script_dir(),
+            preexec_fn=run_child_default_sigint,
+        )
+    finally:
+        signal.signal(signal.SIGINT, old)
     return process.returncode
 
 
 def run_exec_ext():
     path = os.path.join(run_ext_dir(), "ext.py")
-    process = subprocess.run(
-        [sys.executable, "-B", path],
-        cwd=run_ext_dir()
-    )
+    old = signal.signal(signal.SIGINT, signal.SIG_IGN)
+    try:
+        process = subprocess.run(
+            [sys.executable, "-B", path],
+            cwd=run_ext_dir(),
+            preexec_fn=run_child_default_sigint,
+        )
+    finally:
+        signal.signal(signal.SIGINT, old)
     return process.returncode
 
 
@@ -57,7 +77,7 @@ def run_dispatch(cmd):
         run_exec_build()
     elif cmd == "d":
         run_exec_board()
-    elif cmd == "s":
+    elif cmd == "e":
         run_exec_ext()
     elif cmd == "m":
         run_menu()
