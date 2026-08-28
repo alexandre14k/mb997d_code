@@ -1,6 +1,8 @@
 # mb997d_code
 STM32 C Embedded Project Template
 
+![Visitors](https://api.visitorbadge.io/api/VisitorHit?user=alexandre14k&repo=https://github.com/alexandre14k/mb997d_code&label=Views&labelColor=%23555555&countColor=%23007EC6)
+
 # About
 STM32 C Embedded Project Template<br>
 targets the STM32F4-DISCOVERY (MB997) board.<br>
