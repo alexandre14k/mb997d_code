@@ -2,7 +2,10 @@ target("app")
     set_kind("binary")
     set_extension(".elf")
     add_files("main.c")
-    add_files("src/*.c")
+    add_files("src/driver/*.c")
+    add_files("src/interrupt/*.c")
+    add_files("src/kernel/*.c")
+    add_files("src/misc/*.c")
     add_deps("hal")
     add_ldflags(
         "-L" .. path.join(os.scriptdir(), "bsp"),

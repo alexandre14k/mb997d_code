@@ -1,14 +1,22 @@
 #include "stm32f4xx_hal.h"
-#include "src/clock.h"
-#include "src/gpio.h"
+#include "src/driver/clock.h"
+#include "src/driver/gpio.h"
+#include "src/kernel/queue.h"
+#include "src/kernel/statemachine.h"
+#include "src/interrupt/interrupt.h"
 
-int main(void) {
+int main(void)
+{
     HAL_Init();
+
     clock_init();
-    gpio_led_init();
+    gpio_init();
+
+    queue_init();
+    statemachine_init();
+    interrupt_init();
 
     while (1) {
-        gpio_led_toggle();
-        HAL_Delay(500);
+        statemachine_process();
     }
 }
