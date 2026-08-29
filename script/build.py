@@ -3,9 +3,10 @@ import root
 
 
 def build_menu():
-    print("r -- build release")
-    print("g -- build debug")
-    print("c -- build clean")
+    print("m>app")
+    print("r -- target release")
+    print("g -- target debug")
+    print("c -- target clean")
     print("m -- show the menu")
     print("x -- exit")
 
