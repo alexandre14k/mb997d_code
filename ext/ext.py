@@ -215,10 +215,10 @@ def ext_clean():
 
 
 def ext_menu():
-    print("# arch " + ext_arch())
-    print("u -- update ext folder")
-    print("c -- clean ext folder")
-    print("a -- archive ext folder")
+    print("m>ext")
+    print("u -- update "+ext_arch())
+    print("c -- clean")
+    print("a -- archive")
     print("m -- show the menu")
     print("x -- exit")
 
