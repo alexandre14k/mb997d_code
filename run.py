@@ -23,15 +23,19 @@ def run_ext_dir():
 
 
 def run_menu():
-    print("b -- manage build")
-    print("d -- manage board")
-    print("e -- manage ext")
+    print("m")
+    print("a -- setup app")
+    print("e -- setup ext")
+    print("b -- setup board")
     print("m -- show the menu")
     print("x -- exit")
 
 
-def run_exec_build():
-    path = os.path.join(run_script_dir(), "build.py")
+def run_exec_app():
+    path = os.path.join(
+        run_script_dir(),
+        "build.py",
+    )
     old = signal.signal(signal.SIGINT, signal.SIG_IGN)
     try:
         process = subprocess.run(
@@ -45,7 +49,10 @@ def run_exec_build():
 
 
 def run_exec_board():
-    path = os.path.join(run_script_dir(), "board.py")
+    path = os.path.join(
+        run_script_dir(),
+        "board.py",
+    )
     old = signal.signal(signal.SIGINT, signal.SIG_IGN)
     try:
         process = subprocess.run(
@@ -59,7 +66,10 @@ def run_exec_board():
 
 
 def run_exec_ext():
-    path = os.path.join(run_ext_dir(), "ext.py")
+    path = os.path.join(
+        run_ext_dir(),
+        "ext.py",
+    )
     old = signal.signal(signal.SIGINT, signal.SIG_IGN)
     try:
         process = subprocess.run(
@@ -73,18 +83,16 @@ def run_exec_ext():
 
 
 def run_dispatch(cmd):
-    if cmd == "b":
-        run_exec_build()
-    elif cmd == "d":
-        run_exec_board()
+    if cmd == "a":
+        run_exec_app()
     elif cmd == "e":
         run_exec_ext()
+    elif cmd == "b":
+        run_exec_board()
     elif cmd == "m":
         run_menu()
     elif cmd == "x":
         sys.exit(0)
-    else:
-        pass
 
 
 def run_loop():
