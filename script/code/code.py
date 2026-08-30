@@ -27,6 +27,10 @@ def code_help():
             ("c", "continue"),
             ("s", "step in"),
             ("n", "next"),
+            ("ch <value>", "print as char"),
+            ("str <value>", "print as str"),
+            ("bin <value>", "print as bin"),
+            ("hex <value>", "print as hex"),
             ("m", "show the menu"),
             ("x", "exit"),
         ],
@@ -83,6 +87,7 @@ def code_attach(args):
         "target extended-remote localhost:3333"
     )
 
+
 def code_reinit(args):
     if not client.client_connected():
         code = client.client_send(
@@ -105,6 +110,32 @@ def code_break(args):
     return client.client_send(
         "break " + args[0]
     )
+
+
+def code_print_value(args, format_specifier, command_name):
+    if len(args) != 1:
+        print("usage: " + command_name + " <value>")
+        return 0
+
+    return client.client_send(
+        "p/" + format_specifier + " " + args[0]
+    )
+
+
+def code_print_char(args):
+    return code_print_value(args, "c", "ch")
+
+
+def code_print_string(args):
+    return code_print_value(args, "s", "str")
+
+
+def code_print_binary(args):
+    return code_print_value(args, "t", "bin")
+
+
+def code_print_hex(args):
+    return code_print_value(args, "x", "hex")
 
 
 def code_continue(args):
@@ -153,6 +184,18 @@ def code_dispatch(command, args):
 
     if command == "n":
         return code_next(args)
+
+    if command == "ch":
+        return code_print_char(args)
+
+    if command == "str":
+        return code_print_string(args)
+
+    if command == "bin":
+        return code_print_binary(args)
+
+    if command == "hex":
+        return code_print_hex(args)
 
     if command == "h":
         return code_show_help(args)
