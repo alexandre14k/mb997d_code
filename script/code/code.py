@@ -10,7 +10,17 @@ def code_menu():
     base.base_menu_print(
         "m>board>debug>code",
         [
-            ("h", "help"),
+            ("at", "attach"),
+            ("re", "reinit"),
+            ("br <label>", "set break point"),
+            ("d", "delete all break points"),
+            ("c", "continue"),
+            ("ls", "preview next lines"),
+            ("s", "step in"),
+            ("o", "step out"),
+            ("n", "next"),
+            ("", ""),
+            ("h", "tell me more"),
             ("m", "show the menu"),
             ("x", "exit"),
         ],
@@ -23,14 +33,24 @@ def code_help():
         [
             ("at", "attach"),
             ("re", "reinit"),
-            ("br <label>", "break"),
+            ("br <label>", "set break point"),
+            ("d", "delete all break points"),
             ("c", "continue"),
+            ("ls", "preview next lines"),
             ("s", "step in"),
+            ("o", "step out"),
             ("n", "next"),
-            ("ch <value>", "print as char"),
-            ("str <value>", "print as str"),
-            ("bin <value>", "print as bin"),
-            ("hex <value>", "print as hex"),
+            ("ch <expression>", "get as char"),
+            ("str <expression>", "get as str"),
+            ("bin <expression>", "get as bin"),
+            ("hex <expression>", "get as hex"),
+            ("get addr <expression>", "get as hex address"),
+            ("set char <expression>", "allocate and set char"),
+            ("set short <expression>", "allocate and set short"),
+            ("set int <expression>", "allocate and set int"),
+            ("set uchar <expression>", "allocate and set unsigned char"),
+            ("set ushort <expression>", "allocate and set unsigned short"),
+            ("set uint <expression>", "allocate and set unsigned int"),
             ("m", "show the menu"),
             ("x", "exit"),
         ],
@@ -103,24 +123,105 @@ def code_reinit(args):
 
 
 def code_break(args):
-    if len(args) != 1:
-        print("usage: br <label>")
+    expression = code_expression(args, "br")
+
+    if expression is None:
         return 0
 
     return client.client_send(
-        "break " + args[0]
+        "break " + expression
     )
+
+def code_delete_breaks(args):
+    if args:
+        print("usage: d")
+        return 0
+
+    return client.client_send(
+        "delete breakpoints"
+    )
+
+
+def code_step_out(args):
+    if args:
+        print("usage: o")
+        return 0
+
+    return client.client_send(
+        "finish"
+    )
+
+
+def code_expression(args, command_name):
+    if not args:
+        print("usage: " + command_name + " <expression>")
+        return None
+    return " ".join(args)
+
+
+def code_get_address(args):
+    expression = code_expression(args, "get addr")
+
+    if expression is None:
+        return 0
+
+    return client.client_send(
+        "p/x &(" + expression + ")"
+    )
+
+
+def code_set_value(args, type_name, command_name):
+    if len(args) < 1:
+        print("usage: " + command_name + " <expression>")
+        return 0
+
+    expression = " ".join(args)
+
+    sizes = {
+        "char": "sizeof(char)",
+        "short": "sizeof(short)",
+        "int": "sizeof(int)",
+        "uchar": "sizeof(unsigned char)",
+        "ushort": "sizeof(unsigned short)",
+        "uint": "sizeof(unsigned int)",
+    }
+
+    gdb_types = {
+        "char": "char",
+        "short": "short",
+        "int": "int",
+        "uchar": "unsigned char",
+        "ushort": "unsigned short",
+        "uint": "unsigned int",
+    }
+
+    size = sizes[type_name]
+    gdb_type = gdb_types[type_name]
+
+    commands = [
+        "set $code_memory = (" + gdb_type + " *) malloc(" + size + ")",
+        "set {" + gdb_type + "} $code_memory = " + expression,
+        "p/x $code_memory",
+    ]
+
+    for command in commands:
+        code = client.client_send(command)
+
+        if code != 0:
+            return code
+
+    return 0
 
 
 def code_print_value(args, format_specifier, command_name):
-    if len(args) != 1:
-        print("usage: " + command_name + " <value>")
+    expression = code_expression(args, command_name)
+
+    if expression is None:
         return 0
 
     return client.client_send(
-        "p/" + format_specifier + " " + args[0]
+        "p/" + format_specifier + " " + expression
     )
-
 
 def code_print_char(args):
     return code_print_value(args, "c", "ch")
@@ -136,6 +237,51 @@ def code_print_binary(args):
 
 def code_print_hex(args):
     return code_print_value(args, "x", "hex")
+
+
+def code_set_char(args):
+    return code_set_value(args, "char", "set char")
+
+
+def code_set_short(args):
+    return code_set_value(args, "short", "set short")
+
+
+def code_set_int(args):
+    return code_set_value(args, "int", "set int")
+
+
+def code_set_uchar(args):
+    return code_set_value(args, "uchar", "set uchar")
+
+
+def code_set_ushort(args):
+    return code_set_value(args, "ushort", "set ushort")
+
+
+def code_set_uint(args):
+    return code_set_value(args, "uint", "set uint")
+
+
+def code_ls(args):
+    if args:
+        print("usage: ls")
+        return 0
+
+    script = (
+        "import gdb;"
+        "f=gdb.newest_frame();"
+        "s=f.find_sal();"
+        "p=s.symtab.fullname();"
+        "l=s.line;"
+        "x=open(p).read().splitlines();"
+        "e=min(len(x),l+19);"
+        "print('...');"
+        "print('\\n'.join([str(i)+'\\t'+x[i-1] for i in range(l,e+1)]));"
+        "print('...')"
+    )
+
+    return client.client_send("python " + script)
 
 
 def code_continue(args):
@@ -176,11 +322,20 @@ def code_dispatch(command, args):
     if command == "br":
         return code_break(args)
 
+    if command == "d":
+        return code_delete_breaks(args)
+
     if command == "c":
         return code_continue(args)
 
+    if command == "ls":
+        return code_ls(args)
+
     if command == "s":
         return code_step(args)
+
+    if command == "o":
+        return code_step_out(args)
 
     if command == "n":
         return code_next(args)
@@ -199,6 +354,23 @@ def code_dispatch(command, args):
 
     if command == "h":
         return code_show_help(args)
+
+    if command == "get" and len(args) >= 2 and args[0] == "addr":
+        return code_get_address(args[1:])
+
+    if command == "set" and len(args) >= 2:
+        if args[0] == "char":
+            return code_set_char(args[1:])
+        if args[0] == "short":
+            return code_set_short(args[1:])
+        if args[0] == "int":
+            return code_set_int(args[1:])
+        if args[0] == "uchar":
+            return code_set_uchar(args[1:])
+        if args[0] == "ushort":
+            return code_set_ushort(args[1:])
+        if args[0] == "uint":
+            return code_set_uint(args[1:])
 
     if command == "m":
         return code_show_menu(args)

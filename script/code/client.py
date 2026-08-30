@@ -55,7 +55,10 @@ def client_output_print(buffer):
         message = client_filter_message(line)
 
         if message is not None:
-            print(message)
+            if message.strip() == "...":
+                print("...")
+            else:
+                print(message)
 
 
 def client_output_loop():
